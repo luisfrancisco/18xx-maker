@@ -411,9 +411,13 @@
         "label": "Tile Gaps",
         "description": "This says whether to separate different colors with spaces needed to prevent bleed crossover. Leave on unless you really know you want it."
       },
-      "idOffset": {
-        "label": "Tile ID Offset",
-        "description": "Moves the tile id (and any extra id) in from the corner, the same distance up and towards the centre. Use it when ids sit too close to the cut edge."
+      "idOffsetX": {
+        "label": "Tile ID Horizontal Offset",
+        "description": "Moves the tile id (and any extra id) in from the side towards the centre. Negative values move it outward."
+      },
+      "idOffsetY": {
+        "label": "Tile ID Vertical Offset",
+        "description": "Moves the tile id (and any extra id) up from the bottom edge. Negative values move it down."
       }
     },
     "stock": {

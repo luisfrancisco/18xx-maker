@@ -195,8 +195,16 @@ export const sections = [
         ],
       },
       {
-        name: "idOffset",
-        dimension: true,
+        group: [
+          {
+            name: "idOffsetX",
+            dimension: true,
+          },
+          {
+            name: "idOffsetY",
+            dimension: true,
+          },
+        ],
       },
       {
         group: [

@@ -420,9 +420,11 @@
         "pins": {
           "$ref": "#/definitions/pins"
         },
-        "idOffset": {
-          "type": "number",
-          "minimum": 0
+        "idOffsetX": {
+          "type": "number"
+        },
+        "idOffsetY": {
+          "type": "number"
         }
       },
       "required": ["layout", "width", "mapWidth", "gaps"],

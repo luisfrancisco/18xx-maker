@@ -115,7 +115,8 @@
       "x1": 100,
       "x2": 700
     },
-    "idOffset": 0
+    "idOffsetX": 0,
+    "idOffsetY": 0
   },
   "stock": {
     "cell": {
