@@ -753,3 +753,12 @@ footer a:hover {
 .tiles label {
   display: block;
 }
+
+/* Dieline for the html elements (cards, charters): the trim box is the body
+   element itself, so outlining it draws the cut edge in place, on screen and
+   as a vector stroke in printed / saved PDFs. Toggled by the export options. */
+.export-dieline .card__body,
+.export-dieline .charter__body {
+  outline: 0.5pt solid #ff00ff;
+  outline-offset: -0.25pt;
+}
