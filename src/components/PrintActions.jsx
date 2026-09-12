@@ -26,7 +26,7 @@ import { useConfig, useGame } from "@/hooks";
 import { trackEvent } from "@/util/analytics";
 import capability from "@/util/capability";
 import { pdfItems, pngItems } from "@/util/export";
-import { downloadPdf, isDomSection } from "@/util/pdf";
+import { downloadPdf } from "@/util/pdf";
 import { useBooleanParam } from "@/util/query";
 
 const Tip = ({ label, children }) => (
@@ -91,9 +91,8 @@ const PrintActions = () => {
     window.print();
   };
 
-  // Cards, charters and the tile manifest are html, not svg, so they can't go
-  // through the vector exporter: the desktop app prints them to PDF natively
-  // and the browser uses its print dialog.
+  // Only reached when the exporter finds nothing on the page: the desktop app
+  // prints natively, the browser opens its print dialog
   const printNatively = () => {
     if (capability.electron) {
       trackEvent("exportComponent", location, { media: "pdf" });
@@ -104,11 +103,6 @@ const PrintActions = () => {
   };
 
   const onPdf = async () => {
-    if (isDomSection(section)) {
-      printNatively();
-      return;
-    }
-
     trackEvent("downloadPdf", location, {
       section,
       bleed: exportConfig.bleed,
@@ -144,9 +138,7 @@ const PrintActions = () => {
     window.api.exportPNG(game.meta.slug, pngItems(game, config));
   };
 
-  const pdfLabel = isDomSection(section)
-    ? t("export.printDialog")
-    : t("export.downloadPdf");
+  const pdfLabel = t("export.downloadPdf");
 
   return (
     <TooltipProvider delayDuration={300}>

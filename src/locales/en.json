@@ -35,7 +35,6 @@
     "singlePdf": "Export this component as a pdf document",
     "singlePng": "Export this component as a png image",
     "downloadPdf": "Download this component as a PDF",
-    "printDialog": "Save as PDF from the print dialog: cards and charters are html, and the print path keeps their text and shapes as editable vectors with the real fonts, which is what Illustrator needs",
     "print": "Print",
     "bleed": "Bleed: tiles and tokens are drawn past their cut edge, and single-page components get a bleed area of Bleed Size",
     "cropMarks": "Draw crop marks",

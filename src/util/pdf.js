@@ -189,7 +189,7 @@ const firstFontFamily = (fontFamily) =>
 
 // Copy what the browser resolved through CSS onto the clone as attributes.
 // `original` and `clone` must have identical structure.
-const inlineStyles = (original, clone) => {
+export const inlineStyles = (original, clone) => {
   const originals = [original, ...original.querySelectorAll("*")];
   const clones = [clone, ...clone.querySelectorAll("*")];
 
@@ -404,6 +404,10 @@ export const renderPdf = ({
   section,
   paginated,
 }) => {
+  if (isDomSection(section)) {
+    return renderDomPdf({ container, options, section });
+  }
+
   const roots = findPrintRoots(container, rootKind(section, paginated));
   if (roots.length === 0) {
     return null;
@@ -495,6 +499,93 @@ export const renderPdf = ({
   };
 
   return render();
+};
+
+const PX_PER_IN = 96;
+const PT_PER_PX = PT_PER_IN / PX_PER_IN;
+
+// The html elements: each item is exported on a page of its own, and its trim
+// box is the element that carries the bleed as a margin
+const DOM_ITEMS = {
+  cards: { item: ".card", trim: ".card__body" },
+  charters: { item: ".charter", trim: ".charter__body" },
+  "tile-manifest": { item: ".TileManifest", trim: null },
+};
+
+export const findDomItems = (container, section) => {
+  const spec = DOM_ITEMS[section];
+  if (!spec) {
+    return [];
+  }
+
+  return [...container.querySelectorAll(spec.item)].map((el) => ({
+    el,
+    trim: spec.trim ? el.querySelector(spec.trim) : null,
+  }));
+};
+
+// Cards, charters and the tile manifest are html. Each one is converted to
+// plain svg geometry from the browser's own layout (see domToSvg) and written
+// as a vector page of its own, sized to the item with its bleed, plus crop
+// marks and the dieline around the trim box.
+const renderDomPdf = async ({ container, options, section }) => {
+  const items = findDomItems(container, section);
+  if (items.length === 0) {
+    return null;
+  }
+
+  const { domToSvg } = await import("@/util/domToSvg");
+  const markSpace = options.cropMarks ? MARK_SPACE : 0;
+
+  const doc = new jsPDF({ unit: "pt", format: "letter" });
+  doc.deletePage(1);
+
+  for (const { el, trim } of items) {
+    const box = el.getBoundingClientRect();
+    const art = {
+      x: markSpace,
+      y: markSpace,
+      width: box.width * PT_PER_PX,
+      height: box.height * PT_PER_PX,
+    };
+    const pageWidth = art.width + 2 * markSpace;
+    const pageHeight = art.height + 2 * markSpace;
+
+    doc.addPage(
+      [pageWidth, pageHeight],
+      pageWidth > pageHeight ? "landscape" : "portrait",
+    );
+
+    const svg = domToSvg(el);
+    inlineExternalDefs(svg);
+    svg.setAttribute("width", art.width);
+    svg.setAttribute("height", art.height);
+    await doc.svg(svg, art);
+
+    if (!trim) {
+      continue;
+    }
+
+    const t = trim.getBoundingClientRect();
+    const trimBox = {
+      x: art.x + (t.left - box.left) * PT_PER_PX,
+      y: art.y + (t.top - box.top) * PT_PER_PX,
+      width: t.width * PT_PER_PX,
+      height: t.height * PT_PER_PX,
+    };
+    const bleed = Math.max(0, trimBox.x - art.x);
+
+    if (options.cropMarks) {
+      drawCropMarks(doc, trimBox, bleed, markSpace + bleed);
+    }
+
+    if (options.dieline) {
+      setDielineStyle(doc);
+      doc.rect(trimBox.x, trimBox.y, trimBox.width, trimBox.height, "S");
+    }
+  }
+
+  return doc;
 };
 
 export const pdfFilename = (game, section, search) => {
