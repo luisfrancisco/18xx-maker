@@ -144,7 +144,10 @@ const PrintActions = () => {
   return (
     <TooltipProvider delayDuration={300}>
       <div className="z-40 print:hidden fixed bottom-6 right-6 flex flex-col items-end gap-2">
-        <div className="flex flex-row gap-1 rounded-sm border bg-background p-1 shadow">
+        <div className="flex flex-row items-center gap-1 rounded-sm border bg-background p-1 shadow">
+          <span className="px-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            PDF
+          </span>
           <OptionToggle
             label={t("export.bleed")}
             pressed={exportConfig.bleed}

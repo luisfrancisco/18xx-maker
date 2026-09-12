@@ -60,6 +60,10 @@ export const sections = [
           },
         ],
       },
+      {
+        name: "bleedSize",
+        dimension: true,
+      },
     ],
   },
   {

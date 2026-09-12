@@ -226,6 +226,10 @@
         },
         "dieline": {
           "type": "boolean"
+        },
+        "bleedSize": {
+          "type": "number",
+          "minimum": 0
         }
       }
     },

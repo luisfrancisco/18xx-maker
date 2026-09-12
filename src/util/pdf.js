@@ -64,7 +64,7 @@ const BASELINE_SHIFT = {
 };
 
 // The hex clip path from Root.jsx, at scale 1
-const HEX_POINTS = [
+export const HEX_POINTS = [
   [-86.0252, 0],
   [-43.0126, -74.5],
   [43.0126, -74.5],
@@ -77,6 +77,12 @@ const HEX_POINTS = [
 export const DOM_SECTIONS = ["cards", "charters", "tile-manifest"];
 
 export const isDomSection = (section) => DOM_SECTIONS.includes(section);
+
+// Bleed added around single page components, in config units
+export const exportBleed = (config) =>
+  config.export && config.export.bleedSize != null
+    ? config.export.bleedSize
+    : config.bleed || 0;
 
 const toInches = (value) => {
   if (!value) {
@@ -106,7 +112,7 @@ const parseViewBox = (svg) => {
   return { x, y, width, height };
 };
 
-const parseTranslateScale = (transform) => {
+export const parseTranslateScale = (transform) => {
   const translate = /translate\(\s*([-\d.]+)[\s,]+([-\d.]+)\s*\)/.exec(
     transform || "",
   );
@@ -123,7 +129,7 @@ const parseTranslateScale = (transform) => {
 // edge is: "tiles" and "tokens" sheets get a dieline per item and already draw
 // their own bleed, "paginated" pages include the pagination bleed inside the
 // svg, and everything else is a plain "page" whose svg is the trim box.
-const rootKind = (section, paginated) => {
+export const rootKind = (section, paginated) => {
   if (section === "tiles") {
     return "tiles";
   } else if (section === "tokens") {
@@ -138,7 +144,7 @@ const rootKind = (section, paginated) => {
 // Find every svg on the page that is a printable element, with its size in
 // inches. Elements size their svgs in inches for printing, which is also what
 // tells them apart from decorations like the pins.
-const findPrintRoots = (container, kind) => {
+export const findPrintRoots = (container, kind) => {
   const roots = [];
 
   for (const svg of container.querySelectorAll("svg")) {
@@ -337,7 +343,7 @@ const drawTileDielines = (doc, root, art) => {
   setDielineStyle(doc);
 
   for (const group of root.svg.querySelectorAll(
-    ':scope > g[clip-path^="url(#hexBleed"]',
+    ':scope > g[clip-path^="url(#hex"]',
   )) {
     const { x, y, scale } = parseTranslateScale(
       group.getAttribute("transform"),
@@ -397,8 +403,10 @@ export const renderPdf = ({
     return null;
   }
 
-  const bleedUnits = config.bleed || 0;
-  const bleedPt = bleedUnits * PT_PER_UNIT;
+  // Paginated pages carry the pagination bleed inside the svg; the export
+  // bleed size is what gets added around single page components.
+  const paginationBleedPt = (config.bleed || 0) * PT_PER_UNIT;
+  const bleedPt = exportBleed(config) * PT_PER_UNIT;
   const markSpace = options.cropMarks ? MARK_SPACE : 0;
 
   const doc = new jsPDF({ unit: "pt", format: "letter" });
@@ -411,7 +419,7 @@ export const renderPdf = ({
 
       // Paginated pages, tile sheets and token sheets already include bleed
       // inside the svg. Plain pages get a bleed area added around them.
-      const intrinsicBleed = root.kind === "paginated" ? bleedPt : 0;
+      const intrinsicBleed = root.kind === "paginated" ? paginationBleedPt : 0;
       const extraBleed = options.bleed && root.kind === "page" ? bleedPt : 0;
       const pageBleed = intrinsicBleed || extraBleed;
 

@@ -98,14 +98,18 @@ const tileBelow = (page, i) => {
 const pageTiles = (perPage, pages, tiles) => {
   if (tiles.length === 0) return pages;
 
-  let current = take(perPage, tiles);
-  let rest = drop(perPage, tiles);
+  // A paper size smaller than a tile gives a page that holds nothing, which
+  // would otherwise recurse forever; put at least one tile on each page.
+  const size = Math.max(1, perPage || 0);
+
+  let current = take(size, tiles);
+  let rest = drop(size, tiles);
 
   while (rest.length > 0 && rest[0] === null) {
     rest = drop(1, rest);
   }
 
-  return pageTiles(perPage, append(current, pages), rest);
+  return pageTiles(size, append(current, pages), rest);
 };
 
 const TileSheet = () => {

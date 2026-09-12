@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import debounce from "lodash.debounce";
+import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 
 import { assocPath, map, path, split } from "ramda";
@@ -36,11 +37,26 @@ const Input = ({
   const className = clsx({ "border-error": error });
 
   let valuePath = getPath(name);
-  let rawUpdateDebounced = debounce(
-    (value) => setConfig(assocPath(valuePath, value, config)),
-    800,
-    { leading: true },
+
+  // Typed values are committed once typing pauses. The debounced function
+  // has to survive re-renders (a fresh one per render never cancels the last
+  // one's timer, so every keystroke used to be committed 800ms later, and the
+  // leading edge committed the very first character straight away -- typing
+  // a paper width of "85" first applied a page 0.08in wide). It reads the
+  // config through a ref so it always merges into the latest one.
+  const configRef = useRef(config);
+  configRef.current = config;
+  const rawUpdateDebounced = useMemo(
+    () =>
+      debounce(
+        (value) =>
+          setConfig(assocPath(getPath(name), value, configRef.current)),
+        800,
+      ),
+    [name, setConfig],
   );
+  useEffect(() => () => rawUpdateDebounced.cancel(), [rawUpdateDebounced]);
+
   let update = (value) => {
     setConfig(assocPath(valuePath, value, config));
   };

@@ -46,7 +46,8 @@
     "allLayouts": false,
     "bleed": false,
     "cropMarks": true,
-    "dieline": false
+    "dieline": false,
+    "bleedSize": 12.5
   },
   "charters": {
     "style": "color",

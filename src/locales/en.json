@@ -287,7 +287,7 @@
       },
       "bleed": {
         "label": "Bleed",
-        "description": "Add a bleed area (the Pagination Bleed Size in Layout) around components in downloaded PDFs. Tiles, tokens and paginated pages already draw their own bleed, so this only affects single-page components."
+        "description": "Add a bleed area of Bleed Size around single-page components in downloaded PDFs, shown on the canvas as a shaded band."
       },
       "cropMarks": {
         "label": "Crop marks",
@@ -296,6 +296,10 @@
       "dieline": {
         "label": "Dieline",
         "description": "Draw the cut edge as a magenta line in downloaded PDFs: around each tile on tile sheets, around each token on token sheets, and around the trim box of other components. Give this to a die cutter, or hide the layer before printing."
+      },
+      "bleedSize": {
+        "label": "Bleed Size",
+        "description": "How much bleed to add around single-page components (map, market, par, revenue, background) when Bleed is on. Tiles, tokens and paginated pages keep their own built-in bleed."
       }
     },
     "layout": {
@@ -607,6 +611,7 @@
     },
     "data": {
       "title": "Data"
-    }
+    },
+    "close": "Close"
   }
 }

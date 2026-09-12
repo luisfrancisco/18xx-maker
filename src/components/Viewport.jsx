@@ -1,3 +1,4 @@
+import ExportPreview from "@/components/ExportPreview";
 import PrintActions from "@/components/PrintActions";
 import Toolbar from "@/components/Toolbar";
 import Config from "@/components/config/Config";
@@ -13,6 +14,7 @@ const Viewport = ({ children }) => {
     >
       <Toolbar />
       <PrintActions />
+      <ExportPreview />
       {config && <Config />}
       <div id="viewport-children">{children}</div>
     </div>
