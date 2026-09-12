@@ -82,6 +82,12 @@ const Card = () => {
       break;
   }
 
+  // Privates can have a size of their own in the free layout
+  if (type === "private" && config.cards.layout === "free") {
+    cardConfig.width = config.privates.width || cardConfig.width;
+    cardConfig.height = config.privates.height || cardConfig.height;
+  }
+
   let data = getCardData(cardConfig, paperConfig);
 
   let css = `

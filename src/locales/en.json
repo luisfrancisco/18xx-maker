@@ -547,6 +547,14 @@
       "style": {
         "label": "Private Style",
         "description": "Different styles of private cards. Small uses small icons while big uses bigger ones."
+      },
+      "width": {
+        "label": "Private Width",
+        "description": "Width of private company cards in the free layout. Leave at 0 to use the same size as the other cards; any other size puts the privates on pages of their own."
+      },
+      "height": {
+        "label": "Private Height",
+        "description": "Height of private company cards in the free layout. 0 uses the height of the other cards."
       }
     },
     "trains": {

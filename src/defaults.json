@@ -95,7 +95,9 @@
     "reverseMarketTokens": "all"
   },
   "privates": {
-    "style": "small"
+    "style": "small",
+    "width": 0,
+    "height": 0
   },
   "trains": {
     "style": "color",

@@ -395,6 +395,18 @@ export const sections = [
       {
         name: "style",
       },
+      {
+        group: [
+          {
+            name: "width",
+            dimension: true,
+          },
+          {
+            name: "height",
+            dimension: true,
+          },
+        ],
+      },
     ],
   },
   {
