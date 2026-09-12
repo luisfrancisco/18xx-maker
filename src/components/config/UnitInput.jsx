@@ -18,16 +18,29 @@ const allUnits = {
   mm: 3.937007874,
 };
 
+// Config dimensions are stored as whole hundredths of an inch (the schema
+// requires an integer), so a converted value has to be rounded before it goes
+// back out. Without this, anything entered in mm lands on a fraction -- 240mm
+// becomes 944.8818897599999 -- and fails schema validation.
+const toConfig = (displayValue, units) =>
+  Math.round(displayValue * allUnits[units]);
+
+// Converting the other way leaves a floating point tail of its own (850 units
+// reads back as 215.9000000008636 mm), so trim it for display. Two decimals is
+// finer than one stored unit in either direction, so this still round-trips.
+const toDisplay = (configValue, units) =>
+  Math.round((configValue / allUnits[units]) * 100) / 100;
+
 // Component to help input units
 const UnitInput = ({ name, value, label, onChange, errorValidation }) => {
   let [error, setError] = useState(false);
   let [units, setUnits] = useState("inches");
-  let [internalValue, setInternalValue] = useState(value / allUnits[units]);
+  let [internalValue, setInternalValue] = useState(toDisplay(value, units));
 
   const isError = error || errorValidation;
 
   useEffect(() => {
-    setInternalValue(value / allUnits[units]);
+    setInternalValue(toDisplay(value, units));
   }, [value, units]);
 
   let handler = (event) => {
@@ -45,12 +58,12 @@ const UnitInput = ({ name, value, label, onChange, errorValidation }) => {
       }
     }
 
-    onChange(numberValue * allUnits[units]);
+    onChange(toConfig(numberValue, units));
   };
 
   let unitsHandler = (newValue) => {
     setUnits(newValue);
-    setInternalValue(value / allUnits[newValue]);
+    setInternalValue(toDisplay(value, newValue));
   };
 
   const className = clsx({ "border-error": isError });
