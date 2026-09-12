@@ -12,7 +12,7 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 
 // jsPDF's standard fonts stand in for the app fonts
 const FONT_MAP = {
-  display: "helvetica",
+  display: "Bitter",
   serif: "times",
   "sans-serif": "helvetica",
 };

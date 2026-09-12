@@ -142,6 +142,15 @@ a {
   float: left;
 }
 
+/* Tailwind's preflight makes every element border-box. The charter layout
+   predates it and sizes its boxes as content-box (padding on top of height);
+   under border-box the padding swallows the height and the bottom rows spill
+   past the cut edge, so restore content-box inside it. The boxes that are
+   meant to be border-box say so explicitly below. */
+.charter * {
+  box-sizing: content-box;
+}
+
 .charter__bleed {
   box-sizing: border-box;
   position: absolute;

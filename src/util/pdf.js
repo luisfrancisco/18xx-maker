@@ -4,6 +4,7 @@ import "svg2pdf.js";
 
 import { titleToFilename } from "@/util";
 import capability from "@/util/capability";
+import { DISPLAY_FONT, registerFonts } from "@/util/pdfFonts";
 
 // Browser side "Download as PDF".
 //
@@ -30,10 +31,10 @@ const MARK_SPACE = CROP_MARK_LENGTH + CROP_MARK_GAP;
 const DIELINE_WIDTH = 0.5;
 const DIELINE_COLOR = [255, 0, 255]; // magenta, the usual dieline spot colour
 
-// jsPDF only ships its standard fonts and the app fonts are woff2 data urls it
-// can't embed, so map the app font families onto the closest standard font.
+// The display face (Bitter) is embedded from its TTF by pdfFonts; the other
+// app families map onto jsPDF's standard fonts.
 const FONT_MAP = {
-  display: "helvetica",
+  display: DISPLAY_FONT,
   serif: "times",
   "sans-serif": "helvetica",
 };
@@ -423,6 +424,8 @@ export const renderPdf = ({
   doc.deletePage(1);
 
   const render = async () => {
+    await registerFonts(doc);
+
     for (const root of roots) {
       const artWidth = root.widthIn * PT_PER_IN;
       const artHeight = root.heightIn * PT_PER_IN;
@@ -539,6 +542,7 @@ const renderDomPdf = async ({ container, options, section }) => {
 
   const doc = new jsPDF({ unit: "pt", format: "letter" });
   doc.deletePage(1);
+  await registerFonts(doc);
 
   for (const { el, trim } of items) {
     const box = el.getBoundingClientRect();
