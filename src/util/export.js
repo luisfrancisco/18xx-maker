@@ -1,39 +1,14 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useLocation, useMatch } from "react-router";
-
 import { assoc, flatten, forEach, is, keys, map, range } from "ramda";
 
-import ExportIcon from "@mui/icons-material/Collections";
-import PngIcon from "@mui/icons-material/PhotoLibrary";
-import PdfIcon from "@mui/icons-material/PictureAsPdf";
-import Divider from "@mui/material/Divider";
-import Fab from "@mui/material/Fab";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import Slide from "@mui/material/Slide";
-import Tooltip from "@mui/material/Tooltip";
-import makeStyles from "@mui/styles/makeStyles";
-
-import { useConfig, useGame } from "@/hooks";
 import schema from "@/schemas/config.schema.json";
 import { maxPlayers, titleToFilename } from "@/util";
-import { trackEvent } from "@/util/analytics";
 import { compileCompanies, overrideCompanies } from "@/util/companies";
-import { useBooleanParam } from "@/util/query";
 
-const useStyles = makeStyles((theme) => ({
-  exportButton: {
-    zIndex: theme.zIndex.drawer + 1,
-    position: "fixed",
-    bottom: theme.spacing(14),
-    right: theme.spacing(4),
-  },
-}));
+// The lists of app paths (and the file each should be saved as) that the
+// electron app walks when exporting a whole game. Lived in ExportButton.jsx
+// before the shadcn UI; the buttons are now in PrintActions.jsx.
 
-const pngItems = (game, config) => {
+export const pngItems = (game, config) => {
   const filename = titleToFilename(game.info.title);
   let items = {
     background: `${filename}-background.png`,
@@ -118,7 +93,7 @@ const pngItems = (game, config) => {
   return items;
 };
 
-const pdfItems = (game, config) => {
+export const pdfItems = (game, config) => {
   const filename = titleToFilename(game.info.title);
   let items = {
     background: `${filename}-background.pdf`,
@@ -190,106 +165,3 @@ const pdfItems = (game, config) => {
 
   return items;
 };
-
-const ExportButton = () => {
-  const { t } = useTranslation();
-  const classes = useStyles();
-  const location = useLocation();
-  const game = useGame();
-  const { config } = useConfig();
-  const [print] = useBooleanParam("print");
-  const [menuAnchor, setMenuAnchor] = useState(null);
-
-  const match = useMatch("/games/:slug/*");
-  const notOnGames = !match || match.params["*"] === "";
-
-  if (notOnGames || print || !game) {
-    return null;
-  }
-
-  const handleMenu = (event) => {
-    setMenuAnchor(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setMenuAnchor(null);
-  };
-
-  const handleAllPdf = () => {
-    trackEvent("exportGame", location, { media: "pdf" });
-    window.api.exportPDF(game.meta.slug, pdfItems(game, config));
-    handleMenuClose();
-  };
-
-  const handleAllPng = () => {
-    trackEvent("exportGame", location, { media: "png" });
-    window.api.exportPNG(game.meta.slug, pngItems(game, config));
-    handleMenuClose();
-  };
-
-  const handleSinglePdf = () => {
-    trackEvent("exportComponent", location, { media: "pdf" });
-    window.api.pdf(location.pathname + location.search);
-    handleMenuClose();
-  };
-
-  const handleSinglePng = () => {
-    trackEvent("exportComponent", location, { media: "png" });
-    window.api.png(location.pathname + location.search);
-    handleMenuClose();
-  };
-
-  return (
-    <>
-      <Slide direction="left" in={true}>
-        <Tooltip title="Export" aria-label="export" placement="left" arrow>
-          <Fab
-            onClick={handleMenu}
-            position="sticky"
-            className={classes.exportButton}
-            color="primary"
-          >
-            <ExportIcon />
-          </Fab>
-        </Tooltip>
-      </Slide>
-      <Menu
-        id="export-menu"
-        anchorEl={menuAnchor}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
-        onClose={handleMenuClose}
-        open={Boolean(menuAnchor)}
-        keepMounted
-      >
-        <MenuItem onClick={handleAllPdf}>
-          <ListItemIcon>
-            <PdfIcon />
-          </ListItemIcon>
-          <ListItemText primary={t("export.allPdf")} />
-        </MenuItem>
-        <MenuItem onClick={handleAllPng}>
-          <ListItemIcon>
-            <PngIcon />
-          </ListItemIcon>
-          <ListItemText primary={t("export.allPng")} />
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={handleSinglePdf}>
-          <ListItemIcon>
-            <PdfIcon />
-          </ListItemIcon>
-          <ListItemText primary={t("export.singlePdf")} />
-        </MenuItem>
-        <MenuItem onClick={handleSinglePng}>
-          <ListItemIcon>
-            <PngIcon />
-          </ListItemIcon>
-          <ListItemText primary={t("export.singlePng")} />
-        </MenuItem>
-      </Menu>
-    </>
-  );
-};
-
-export default ExportButton;

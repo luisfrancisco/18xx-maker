@@ -1,3 +1,4 @@
+import PrintActions from "@/components/PrintActions";
 import Toolbar from "@/components/Toolbar";
 import Config from "@/components/config/Config";
 
@@ -11,6 +12,7 @@ const Viewport = ({ children }) => {
       className="editor-checkered print:bg-none print:bg-white select-none overscroll-none"
     >
       <Toolbar />
+      <PrintActions />
       {config && <Config />}
       <div id="viewport-children">{children}</div>
     </div>

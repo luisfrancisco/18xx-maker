@@ -47,6 +47,19 @@ export const sections = [
       {
         name: "allLayouts",
       },
+      {
+        group: [
+          {
+            name: "bleed",
+          },
+          {
+            name: "cropMarks",
+          },
+          {
+            name: "dieline",
+          },
+        ],
+      },
     ],
   },
   {

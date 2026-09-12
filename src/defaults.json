@@ -43,7 +43,10 @@
   "theme": "gmt",
   "companiesTheme": "rob",
   "export": {
-    "allLayouts": false
+    "allLayouts": false,
+    "bleed": false,
+    "cropMarks": true,
+    "dieline": false
   },
   "charters": {
     "style": "color",

@@ -33,7 +33,13 @@
     "allPdf": "Export game as pdf documents",
     "allPng": "Export game as png images",
     "singlePdf": "Export this component as a pdf document",
-    "singlePng": "Export this component as a png image"
+    "singlePng": "Export this component as a png image",
+    "downloadPdf": "Download this component as a PDF",
+    "printDialog": "This component is html, so use the print dialog and choose Save as PDF",
+    "print": "Print",
+    "bleed": "Add a bleed area around the component",
+    "cropMarks": "Draw crop marks",
+    "dieline": "Draw the dieline (cut edge)"
   },
   "settings": {
     "title": "Settings",
@@ -278,6 +284,18 @@
       "allLayouts": {
         "label": "Export all layout options",
         "description": "When exporting pdf components with multiple layout options, should we just export all of them?"
+      },
+      "bleed": {
+        "label": "Bleed",
+        "description": "Add a bleed area (the Pagination Bleed Size in Layout) around components in downloaded PDFs. Tiles, tokens and paginated pages already draw their own bleed, so this only affects single-page components."
+      },
+      "cropMarks": {
+        "label": "Crop marks",
+        "description": "Draw trim marks outside the bleed area in downloaded PDFs."
+      },
+      "dieline": {
+        "label": "Dieline",
+        "description": "Draw the cut edge as a magenta line in downloaded PDFs: around each tile on tile sheets, around each token on token sheets, and around the trim box of other components. Give this to a die cutter, or hide the layer before printing."
       }
     },
     "layout": {

@@ -126,6 +126,8 @@ const SvgEditor = ({ width, height, children }) => {
   return (
     <div
       id="editor"
+      data-print-width={width}
+      data-print-height={height}
       className="overflow-hidden w-screen h-screen print:w-auto print:h-auto touch-none"
     >
       <Svg

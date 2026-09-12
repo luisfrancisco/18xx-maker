@@ -203,10 +203,12 @@
     "express": "^4.21.1",
     "glob": "^11.0.0",
     "json-schema-library": "10.0.0-rc2",
+    "jspdf": "^4.2.1",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.462.0",
     "ramda": "^0.30.1",
     "react-hook-form": "^7.53.2",
+    "svg2pdf.js": "^2.8.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.8"
