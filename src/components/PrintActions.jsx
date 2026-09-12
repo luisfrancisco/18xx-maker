@@ -91,10 +91,21 @@ const PrintActions = () => {
     window.print();
   };
 
-  const onPdf = async () => {
+  // Cards, charters and the tile manifest are html, not svg, so they can't go
+  // through the vector exporter: the desktop app prints them to PDF natively
+  // and the browser uses its print dialog.
+  const printNatively = () => {
     if (capability.electron) {
       trackEvent("exportComponent", location, { media: "pdf" });
       window.api.pdf(path);
+    } else {
+      window.print();
+    }
+  };
+
+  const onPdf = async () => {
+    if (isDomSection(section)) {
+      printNatively();
       return;
     }
 
@@ -105,20 +116,16 @@ const PrintActions = () => {
       cropMarks: exportConfig.cropMarks,
     });
 
-    // Cards, charters and the tile manifest are html, not svg, so they can
-    // only be saved through the browser's print dialog
-    const saved =
-      !isDomSection(section) &&
-      (await downloadPdf({
-        game,
-        config,
-        section,
-        search: location.search,
-        options: exportConfig,
-      }));
+    const saved = await downloadPdf({
+      game,
+      config,
+      section,
+      search: location.search,
+      options: exportConfig,
+    });
 
     if (!saved) {
-      window.print();
+      printNatively();
     }
   };
 

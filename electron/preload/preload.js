@@ -5,6 +5,7 @@ const api = {
   exportPDF: (game, items) => ipcRenderer.send("exportPDF", game, items),
   exportPNG: (game, items) => ipcRenderer.send("exportPNG", game, items),
   pdf: (path) => ipcRenderer.send("pdf", path),
+  savePdf: (filename, data) => ipcRenderer.invoke("savePdf", filename, data),
   png: (path) => ipcRenderer.send("png", path),
 
   saveGamePath: (file) =>

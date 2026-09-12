@@ -3,6 +3,7 @@ import { jsPDF } from "jspdf";
 import "svg2pdf.js";
 
 import { titleToFilename } from "@/util";
+import capability from "@/util/capability";
 
 // Browser side "Download as PDF".
 //
@@ -531,6 +532,15 @@ export const downloadPdf = async ({
     return false;
   }
 
-  doc.save(pdfFilename(game, section, search));
+  const filename = pdfFilename(game, section, search);
+
+  // The desktop app can't download; hand the bytes to the main process,
+  // which asks where to save them.
+  if (capability.electron && window.api.savePdf) {
+    await window.api.savePdf(filename, doc.output("arraybuffer"));
+    return true;
+  }
+
+  doc.save(filename);
   return true;
 };
