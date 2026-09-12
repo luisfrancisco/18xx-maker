@@ -243,7 +243,11 @@ const Tokens = () => {
     selection,
   );
 
-  const data = getTokenData(game, config.tokens, config.paper);
+  const data = getTokenData(
+    game,
+    { ...config.tokens, bleed: config.export.bleed },
+    config.paper,
+  );
 
   return <TokenLayout companies={companies} data={data} game={game} />;
 };

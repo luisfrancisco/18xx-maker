@@ -34,7 +34,9 @@ const TileSheet = () => {
           }}
           viewBox={`-100 -100 200 200`}
         >
-          <g clipPath={`url(#hexClipPath)`}>
+          <g
+            clipPath={`url(#${config.export.bleed ? "hexBleedClipPath" : "hexClipPath"})`}
+          >
             <Hex hex={tile} id={tile.id} clipPath="hexBleedClipPath" />
           </g>
         </Svg>

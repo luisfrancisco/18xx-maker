@@ -61,7 +61,7 @@ const measure = (container, kind, config, options) => {
   const shapes = { bleed: [], marks: [], dielines: [] };
   const paginationBleed = config.bleed || 0;
   const bleedUnits = exportBleed(config);
-  const tokenBleed = config.tokens.bleed ? 5 : 0;
+  const tokenBleed = config.export.bleed ? 5 : 0;
 
   for (const root of findPrintRoots(container, kind)) {
     const { scale, toPx } = mapper(root.svg);

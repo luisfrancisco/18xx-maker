@@ -123,7 +123,8 @@ const TileSheet = () => {
     navigate(`/games/${game.meta.slug}/`);
   }
 
-  let c = getTileSheetContext(layout, paper, hexWidth);
+  const bleed = config.export.bleed;
+  let c = getTileSheetContext(layout, paper, hexWidth, bleed);
 
   let tiles = gatherTiles(game.tiles);
 
@@ -292,6 +293,10 @@ const TileSheet = () => {
         }
 
         sides.push(clone(currentSides));
+      }
+
+      if (!bleed) {
+        clipPath = "hexClipPath";
       }
 
       // Overrides from tile definitions

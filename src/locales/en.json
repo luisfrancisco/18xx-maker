@@ -37,7 +37,7 @@
     "downloadPdf": "Download this component as a PDF",
     "printDialog": "This component is html, so use the print dialog and choose Save as PDF",
     "print": "Print",
-    "bleed": "Add a bleed area around the component",
+    "bleed": "Bleed: tiles and tokens are drawn past their cut edge, and single-page components get a bleed area of Bleed Size",
     "cropMarks": "Draw crop marks",
     "dieline": "Draw the dieline (cut edge)"
   },
@@ -287,7 +287,7 @@
       },
       "bleed": {
         "label": "Bleed",
-        "description": "Add a bleed area of Bleed Size around single-page components in downloaded PDFs, shown on the canvas as a shaded band."
+        "description": "Draw bleed everywhere: tiles and tokens extend past their cut edge (the individual tile layout spaces tiles out to make room), and single-page components (map, market, par, revenue, background) get a bleed area of Bleed Size around them in downloaded PDFs, shown on the canvas as a shaded band."
       },
       "cropMarks": {
         "label": "Crop marks",
@@ -410,6 +410,10 @@
       "gaps": {
         "label": "Tile Gaps",
         "description": "This says whether to separate different colors with spaces needed to prevent bleed crossover. Leave on unless you really know you want it."
+      },
+      "idOffset": {
+        "label": "Tile ID Offset",
+        "description": "Moves the tile id (and any extra id) in from the corner, the same distance up and towards the centre. Use it when ids sit too close to the cut edge."
       }
     },
     "stock": {

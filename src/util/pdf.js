@@ -299,10 +299,15 @@ const prepareClone = (root) => {
   return clone;
 };
 
-const drawCropMarks = (doc, trim, bleed) => {
+// `room` is how much page there is outside the trim box; marks are shortened
+// to fit in it rather than running off the page.
+const drawCropMarks = (doc, trim, bleed, room) => {
   const { x, y, width, height } = trim;
   const gap = bleed + CROP_MARK_GAP;
-  const length = CROP_MARK_LENGTH;
+  const length = Math.min(CROP_MARK_LENGTH, room - gap);
+  if (length < 2) {
+    return;
+  }
 
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.25);
@@ -423,8 +428,24 @@ export const renderPdf = ({
       const extraBleed = options.bleed && root.kind === "page" ? bleedPt : 0;
       const pageBleed = intrinsicBleed || extraBleed;
 
-      const pageWidth = artWidth + 2 * (extraBleed + markSpace);
-      const pageHeight = artHeight + 2 * (extraBleed + markSpace);
+      // Use the configured paper whenever the component and its bleed fit on
+      // it (in either orientation), centred, with the crop marks using
+      // whatever margin is left. Anything bigger, like a whole map, gets a
+      // page of its own size with room for the marks instead.
+      const fitWidth = artWidth + 2 * extraBleed;
+      const fitHeight = artHeight + 2 * extraBleed;
+      const paperWidth = config.paper.width * PT_PER_UNIT;
+      const paperHeight = config.paper.height * PT_PER_UNIT;
+
+      let pageWidth = fitWidth + 2 * markSpace;
+      let pageHeight = fitHeight + 2 * markSpace;
+      if (fitWidth <= paperWidth && fitHeight <= paperHeight) {
+        pageWidth = paperWidth;
+        pageHeight = paperHeight;
+      } else if (fitWidth <= paperHeight && fitHeight <= paperWidth) {
+        pageWidth = paperHeight;
+        pageHeight = paperWidth;
+      }
 
       doc.addPage(
         [pageWidth, pageHeight],
@@ -432,8 +453,8 @@ export const renderPdf = ({
       );
 
       const art = {
-        x: markSpace + extraBleed,
-        y: markSpace + extraBleed,
+        x: (pageWidth - artWidth) / 2,
+        y: (pageHeight - artHeight) / 2,
         width: artWidth,
         height: artHeight,
       };
@@ -448,14 +469,20 @@ export const renderPdf = ({
       await doc.svg(clone, art);
 
       if (options.cropMarks) {
-        drawCropMarks(doc, trim, pageBleed);
+        const room = Math.min(
+          trim.x,
+          trim.y,
+          pageWidth - trim.x - trim.width,
+          pageHeight - trim.y - trim.height,
+        );
+        drawCropMarks(doc, trim, pageBleed, room);
       }
 
       if (options.dieline) {
         if (root.kind === "tiles") {
           drawTileDielines(doc, root, art);
         } else if (root.kind === "tokens") {
-          drawTokenDielines(doc, root, art, config.tokens.bleed ? 5 : 0);
+          drawTokenDielines(doc, root, art, config.export.bleed ? 5 : 0);
         } else {
           setDielineStyle(doc);
           doc.rect(trim.x, trim.y, trim.width, trim.height, "S");

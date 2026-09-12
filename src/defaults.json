@@ -44,7 +44,7 @@
   "companiesTheme": "rob",
   "export": {
     "allLayouts": false,
-    "bleed": false,
+    "bleed": true,
     "cropMarks": true,
     "dieline": false,
     "bleedSize": 12.5
@@ -114,7 +114,8 @@
       "y": 25,
       "x1": 100,
       "x2": 700
-    }
+    },
+    "idOffset": 0
   },
   "stock": {
     "cell": {

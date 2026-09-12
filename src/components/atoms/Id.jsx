@@ -44,23 +44,29 @@ const Id = ({ id, displayID, extra, bgColor, noID }) => {
   let extraFontSize =
     extra && extra.length > 4 ? "9" : extra && extra.length > 3 ? "10" : "12";
 
+  // The id sits in a bottom corner, 70 units down and 40 across. Ids that
+  // run close to the cut edge can be pulled in towards the centre by the
+  // tiles.idOffset config, which moves them the same amount up and inward.
+  const offset = config.tiles.idOffset || 0;
+  const idY = 70 - offset;
+
   // Otherwise it's right or left
   let idAnchor = "end";
   let extraAnchor = "start";
-  let idX = 40;
-  let extraX = -40;
+  let idX = 40 - offset;
+  let extraX = -40 + offset;
   if (config.tiles.id === "left") {
     idAnchor = "start";
     extraAnchor = "end";
-    idX = -40;
-    extraX = 40;
+    idX = -40 + offset;
+    extraX = 40 - offset;
   }
 
   return (
     <Color>
       {(c) => (
         <>
-          <g transform={`rotate(${rotation}) translate(${idX} 70)`}>
+          <g transform={`rotate(${rotation}) translate(${idX} ${idY})`}>
             <text
               fontFamily="sans-serif"
               fill={c("black")}
@@ -78,7 +84,7 @@ const Id = ({ id, displayID, extra, bgColor, noID }) => {
             </text>
           </g>
           {extra && (
-            <g transform={`rotate(${rotation}) translate(${extraX} 70)`}>
+            <g transform={`rotate(${rotation}) translate(${extraX} ${idY})`}>
               <text
                 fontFamily="sans-serif"
                 fill={c("black")}

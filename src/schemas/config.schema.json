@@ -419,6 +419,10 @@
         },
         "pins": {
           "$ref": "#/definitions/pins"
+        },
+        "idOffset": {
+          "type": "number",
+          "minimum": 0
         }
       },
       "required": ["layout", "width", "mapWidth", "gaps"],
