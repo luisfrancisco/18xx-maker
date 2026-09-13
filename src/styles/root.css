@@ -779,3 +779,14 @@ footer a:hover {
   color: #000;
   color-scheme: light;
 }
+
+/* Tile colorblind symbols (⏷ ⏹ ⏺ ✱ ★ ⨉ ⏶ 〜). The system fonts don't reliably
+   have these, so they come from a small embedded font (glyphs from the Noto
+   fonts, OFL), the same file the PDF export embeds. */
+@font-face {
+  font-family: "colorblind";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("../fonts/ColorblindSymbols.ttf") format("truetype");
+}

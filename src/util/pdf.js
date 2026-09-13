@@ -4,7 +4,7 @@ import "svg2pdf.js";
 
 import { titleToFilename } from "@/util";
 import capability from "@/util/capability";
-import { DISPLAY_FONT, registerFonts } from "@/util/pdfFonts";
+import { COLORBLIND_FONT, DISPLAY_FONT, registerFonts } from "@/util/pdfFonts";
 
 // Browser side "Download as PDF".
 //
@@ -31,10 +31,11 @@ const MARK_SPACE = CROP_MARK_LENGTH + CROP_MARK_GAP;
 const DIELINE_WIDTH = 0.5;
 const DIELINE_COLOR = [255, 0, 255]; // magenta, the usual dieline spot colour
 
-// The display face (Bitter) is embedded from its TTF by pdfFonts; the other
-// app families map onto jsPDF's standard fonts.
+// The display face (Bitter) and the colorblind symbols are embedded from their
+// TTFs by pdfFonts; the other app families map onto jsPDF's standard fonts.
 const FONT_MAP = {
   display: DISPLAY_FONT,
+  [COLORBLIND_FONT]: COLORBLIND_FONT,
   serif: "times",
   "sans-serif": "helvetica",
 };

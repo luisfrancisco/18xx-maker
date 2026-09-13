@@ -2,20 +2,32 @@ import bitterBold from "@/fonts/Bitter-Bold.ttf?url";
 import bitterBoldItalic from "@/fonts/Bitter-BoldItalic.ttf?url";
 import bitterItalic from "@/fonts/Bitter-Italic.ttf?url";
 import bitterRegular from "@/fonts/Bitter-Regular.ttf?url";
+import colorblindSymbols from "@/fonts/ColorblindSymbols.ttf?url";
+
+// Font name used in the svg / pdf for the display face
+export const DISPLAY_FONT = "Bitter";
+
+// Font family for the tile colorblind symbols (⏷ ⏹ ⏺ ✱ ★ ⨉ ⏶ 〜), used as-is
+// in the svg and registered under the same name in the pdf
+export const COLORBLIND_FONT = "colorblind";
 
 // The app's "display" face is Bitter, shipped to the browser as woff2, which
 // jsPDF can't embed. These are the same faces as TTF; they are fetched the
 // first time a PDF is made and registered on every document, so exported text
-// uses the real font rather than Helvetica.
+// uses the real font rather than Helvetica. The colorblind symbols get a small
+// font of their own, since no standard PDF font has those glyphs.
 const FACES = [
   { file: "Bitter-Regular.ttf", url: bitterRegular, style: "normal" },
   { file: "Bitter-Bold.ttf", url: bitterBold, style: "bold" },
   { file: "Bitter-Italic.ttf", url: bitterItalic, style: "italic" },
   { file: "Bitter-BoldItalic.ttf", url: bitterBoldItalic, style: "bolditalic" },
+  {
+    file: "ColorblindSymbols.ttf",
+    url: colorblindSymbols,
+    style: "normal",
+    family: COLORBLIND_FONT,
+  },
 ];
-
-// Font name used in the svg / pdf for the display face
-export const DISPLAY_FONT = "Bitter";
 
 const toBase64 = (buffer) => {
   const bytes = new Uint8Array(buffer);
@@ -59,7 +71,7 @@ export const registerFonts = async (doc) => {
 
   for (const face of faces) {
     doc.addFileToVFS(face.file, face.data);
-    doc.addFont(face.file, DISPLAY_FONT, face.style);
+    doc.addFont(face.file, face.family || DISPLAY_FONT, face.style);
   }
 
   return true;
