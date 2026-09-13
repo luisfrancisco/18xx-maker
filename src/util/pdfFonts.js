@@ -17,16 +17,41 @@ export const COLORBLIND_FONT = "colorblind";
 // first time a PDF is made and registered on every document, so exported text
 // uses the real font rather than Helvetica. The colorblind symbols get a small
 // font of their own, since no standard PDF font has those glyphs.
+//
+// postScriptName is each file's own PostScript name (name table ID 6), which
+// is what the PDF has to call the font for Illustrator and other editors to
+// match it with the installed font.
 const FACES = [
-  { file: "Bitter-Regular.ttf", url: bitterRegular, style: "normal" },
-  { file: "Bitter-Bold.ttf", url: bitterBold, style: "bold" },
-  { file: "Bitter-Italic.ttf", url: bitterItalic, style: "italic" },
-  { file: "Bitter-BoldItalic.ttf", url: bitterBoldItalic, style: "bolditalic" },
+  {
+    file: "Bitter-Regular.ttf",
+    url: bitterRegular,
+    style: "normal",
+    postScriptName: "Bitter-Regular",
+  },
+  {
+    file: "Bitter-Bold.ttf",
+    url: bitterBold,
+    style: "bold",
+    postScriptName: "Bitter-Bold",
+  },
+  {
+    file: "Bitter-Italic.ttf",
+    url: bitterItalic,
+    style: "italic",
+    postScriptName: "Bitter-Italic",
+  },
+  {
+    file: "Bitter-BoldItalic.ttf",
+    url: bitterBoldItalic,
+    style: "bolditalic",
+    postScriptName: "Bitter-BoldItalic",
+  },
   {
     file: "ColorblindSymbols.ttf",
     url: colorblindSymbols,
     style: "normal",
     family: COLORBLIND_FONT,
+    postScriptName: "ColorblindSymbols-Regular",
   },
 ];
 
@@ -70,10 +95,32 @@ export const registerFonts = async (doc) => {
     return false;
   }
 
-  for (const face of faces) {
+  const registered = faces.map((face) => {
+    const family = face.family || DISPLAY_FONT;
     doc.addFileToVFS(face.file, face.data);
-    doc.addFont(face.file, face.family || DISPLAY_FONT, face.style);
-  }
+    doc.addFont(face.file, family, face.style);
+    return {
+      font: doc.internal.getFont(family, face.style),
+      family,
+      postScriptName: face.postScriptName,
+    };
+  });
+
+  // jsPDF writes the family name the font was registered under ("Bitter",
+  // "colorblind") as the font's name in the file, the same for every style.
+  // Editors like Illustrator match fonts by PostScript name, so they couldn't
+  // find these. Swap in the real PostScript names while the file is written,
+  // then put the family names back, since jsPDF looks fonts up by them.
+  doc.internal.events.subscribe("buildDocument", () => {
+    for (const { font, postScriptName } of registered) {
+      font.fontName = postScriptName;
+    }
+  });
+  doc.internal.events.subscribe("postPutResources", () => {
+    for (const { font, family } of registered) {
+      font.fontName = family;
+    }
+  });
 
   return true;
 };
