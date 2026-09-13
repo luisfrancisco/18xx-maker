@@ -30,20 +30,57 @@ const colorblindShapes = {
 
 const shapeFor = (color) => colorblindShapes[color] || null;
 
-// Equilateral triangle of base 2r, centred on its own centroid: the same
-// base/height ratio (1/√3 and 2/√3 times the half-base) as the big
-// private-company triangle in atoms/shapes/Triangle.jsx.
-const TRIANGLE_BASE = 1 / Math.sqrt(3);
-const TRIANGLE_APEX = 2 / Math.sqrt(3);
+// Sizing for each shape, as a ratio of fontSize. These are the actual ink
+// metrics of the Unicode characters they replace (⏷ ⏹ ⏺ ✱ ★ ⨉ ⏶ 〜) measured
+// with canvas 2D's actualBoundingBox* at the browser's default sans-serif --
+// advance is the character's own advance width (how much horizontal room the
+// old text flow gave it), width/height its ink bounding box, and centerY how
+// far above the baseline that ink box sits centred -- so a shape here takes
+// up the same space and sits at the same height its glyph used to.
+// Triangles are the one deliberate departure: real ones are equilateral
+// (height = width * √3/2), not whatever aspect ratio happened to render.
+const SHAPE_METRICS = {
+  triangleDown: { advance: 0.5, width: 0.5, centerY: 0.3155 },
+  triangleUp: { advance: 0.5, width: 0.5, centerY: 0.3565 },
+  square: { advance: 0.63, width: 0.486, height: 0.486, centerY: 0.337 },
+  circle: { advance: 0.63, width: 0.55, height: 0.55, centerY: 0.3375 },
+  star: { advance: 1.0, width: 0.971, height: 0.937, centerY: 0.3905 },
+  x: { advance: 0.666, width: 0.541, height: 0.538, centerY: 0.269 },
+  asterisk: { advance: 0.744, width: 0.678, height: 0.694, centerY: 0.347 },
+  wave: { advance: 1.021, width: 0.773, height: 0.206, centerY: 0.356 },
+};
+// The gap between a single colorblind shape and the id used to be a real
+// space character; two shapes (a striped hex) were concatenated onto each
+// other and the id with no spaces at all, so that packing stays tight.
+const SPACE_RATIO = 0.2778;
 
-const Symbol = ({ shape, x, y, size, fill }) => {
-  const r = size / 2;
+const EQUILATERAL_RATIO = Math.sqrt(3) / 2;
+
+// Metrics for one shape scaled to the current font size, in absolute units
+const metricsFor = (shape, fontSize) => {
+  const m = SHAPE_METRICS[shape];
+  const width = m.width * fontSize;
+  const height =
+    (m.height != null ? m.height : m.width * EQUILATERAL_RATIO) * fontSize;
+  return {
+    advance: m.advance * fontSize,
+    width,
+    height,
+    centerY: m.centerY * fontSize,
+  };
+};
+
+const Symbol = ({ shape, x, y, width, height, fill }) => {
+  const rw = width / 2;
+  const rh = height / 2;
 
   switch (shape) {
+    // Equilateral triangles, bounding box centred on (x, y): base 2*rw,
+    // height 2*rh (rh = rw * √3/2 from metricsFor).
     case "triangleDown":
       return (
         <polygon
-          points={`${-r},${-r * TRIANGLE_BASE} ${r},${-r * TRIANGLE_BASE} 0,${r * TRIANGLE_APEX}`}
+          points={`${-rw},${-rh} ${rw},${-rh} 0,${rh}`}
           fill={fill}
           transform={`translate(${x} ${y})`}
         />
@@ -51,60 +88,51 @@ const Symbol = ({ shape, x, y, size, fill }) => {
     case "triangleUp":
       return (
         <polygon
-          points={`${-r},${r * TRIANGLE_BASE} ${r},${r * TRIANGLE_BASE} 0,${-r * TRIANGLE_APEX}`}
+          points={`${-rw},${rh} ${rw},${rh} 0,${-rh}`}
           fill={fill}
           transform={`translate(${x} ${y})`}
         />
       );
     case "square":
       return (
-        <rect
-          x={x - r * 0.75}
-          y={y - r * 0.75}
-          width={r * 1.5}
-          height={r * 1.5}
-          fill={fill}
-        />
+        <rect x={x - rw} y={y - rh} width={width} height={height} fill={fill} />
       );
     case "circle":
-      return <circle cx={x} cy={y} r={r * 0.8} fill={fill} />;
+      return <circle cx={x} cy={y} r={rw} fill={fill} />;
     case "star": {
       const points = [];
       for (let i = 0; i < 10; i++) {
         const angle = (Math.PI / 5) * i - Math.PI / 2;
-        const radius = i % 2 === 0 ? r : r * 0.42;
-        points.push(
-          `${x + radius * Math.cos(angle)},${y + radius * Math.sin(angle)}`,
-        );
+        const r = i % 2 === 0 ? rw : rw * 0.4;
+        const ry = i % 2 === 0 ? rh : rh * 0.4;
+        points.push(`${x + r * Math.cos(angle)},${y + ry * Math.sin(angle)}`);
       }
       return <polygon points={points.join(" ")} fill={fill} />;
     }
     case "x":
       return (
-        <g stroke={fill} strokeWidth={size * 0.24} strokeLinecap="round">
-          <line
-            x1={x - r * 0.7}
-            y1={y - r * 0.7}
-            x2={x + r * 0.7}
-            y2={y + r * 0.7}
-          />
-          <line
-            x1={x - r * 0.7}
-            y1={y + r * 0.7}
-            x2={x + r * 0.7}
-            y2={y - r * 0.7}
-          />
+        <g
+          stroke={fill}
+          strokeWidth={Math.min(width, height) * 0.26}
+          strokeLinecap="round"
+        >
+          <line x1={x - rw} y1={y - rh} x2={x + rw} y2={y + rh} />
+          <line x1={x - rw} y1={y + rh} x2={x + rw} y2={y - rh} />
         </g>
       );
     case "asterisk": {
       const lines = [0, 1, 2].map((i) => {
         const angle = (Math.PI / 3) * i;
-        const dx = r * Math.cos(angle);
-        const dy = r * Math.sin(angle);
+        const dx = rw * Math.cos(angle);
+        const dy = rh * Math.sin(angle);
         return <line key={i} x1={x - dx} y1={y - dy} x2={x + dx} y2={y + dy} />;
       });
       return (
-        <g stroke={fill} strokeWidth={size * 0.2} strokeLinecap="round">
+        <g
+          stroke={fill}
+          strokeWidth={Math.min(width, height) * 0.24}
+          strokeLinecap="round"
+        >
           {lines}
         </g>
       );
@@ -112,10 +140,10 @@ const Symbol = ({ shape, x, y, size, fill }) => {
     case "wave":
       return (
         <path
-          d={`M ${x - r} ${y} Q ${x - r * 0.5} ${y - r * 0.8} ${x} ${y} Q ${x + r * 0.5} ${y + r * 0.8} ${x + r} ${y}`}
+          d={`M ${x - rw} ${y} Q ${x - rw * 0.5} ${y - rh} ${x} ${y} Q ${x + rw * 0.5} ${y + rh} ${x + rw} ${y}`}
           fill="none"
           stroke={fill}
-          strokeWidth={size * 0.2}
+          strokeWidth={height * 0.45}
           strokeLinecap="round"
         />
       );
@@ -150,6 +178,7 @@ const Id = ({ id, displayID, extra, bgColor, noID }) => {
   let fontSize = effectiveLength > 4 ? "9" : effectiveLength > 3 ? "10" : "12";
   let extraFontSize =
     extra && extra.length > 4 ? "9" : extra && extra.length > 3 ? "10" : "12";
+  const fontSizeNum = parseFloat(fontSize);
 
   // The id sits in a bottom corner, 70 units down and 40 across. Ids that
   // run close to the cut edge can be pulled in towards the centre with the
@@ -189,37 +218,37 @@ const Id = ({ id, displayID, extra, bgColor, noID }) => {
     return null;
   }
 
-  const symbolSize = parseFloat(fontSize) * 0.85;
-  // The two colorblind shapes for a striped hex were concatenated directly
-  // onto each other with no gap, and only the last one had a gap before the
-  // id; keep that same tight packing.
-  const gap = parseFloat(fontSize) * 0.25;
-  // The digits sit on the baseline (idY), so most of their height is above
-  // it; a shape centred on idY would hang visibly low next to them. Lift it
-  // by roughly half a digit's cap-height so it lines up with the digits'
-  // visual centre instead.
-  const symbolY = idY - parseFloat(fontSize) * 0.35;
+  // A single shape had a real space before the id; two (a striped hex) were
+  // packed with no gap anywhere, including before the id.
+  const gapBeforeDigits = shapes.length === 1 ? SPACE_RATIO * fontSizeNum : 0;
 
   let digitsX = idX;
   const symbolPositions = [];
 
   if (shapes.length > 0) {
     if (idAnchor === "end") {
-      let cursor = idX - digitsWidth - gap;
+      let cursor = idX - digitsWidth - gapBeforeDigits;
       for (let i = shapes.length - 1; i >= 0; i--) {
+        const metrics = metricsFor(shapes[i], fontSizeNum);
         symbolPositions.unshift({
           shape: shapes[i],
-          x: cursor - symbolSize / 2,
+          x: cursor - metrics.advance / 2,
+          metrics,
         });
-        cursor -= symbolSize;
+        cursor -= metrics.advance;
       }
     } else {
       let cursor = idX;
       for (let i = 0; i < shapes.length; i++) {
-        symbolPositions.push({ shape: shapes[i], x: cursor + symbolSize / 2 });
-        cursor += symbolSize;
+        const metrics = metricsFor(shapes[i], fontSizeNum);
+        symbolPositions.push({
+          shape: shapes[i],
+          x: cursor + metrics.advance / 2,
+          metrics,
+        });
+        cursor += metrics.advance;
       }
-      digitsX = cursor + gap;
+      digitsX = cursor + gapBeforeDigits;
     }
   }
 
@@ -228,13 +257,14 @@ const Id = ({ id, displayID, extra, bgColor, noID }) => {
       {(c) => (
         <>
           <g transform={`rotate(${rotation})`}>
-            {symbolPositions.map(({ shape, x }, i) => (
+            {symbolPositions.map(({ shape, x, metrics }, i) => (
               <Symbol
                 key={i}
                 shape={shape}
                 x={x}
-                y={symbolY}
-                size={symbolSize}
+                y={idY - metrics.centerY}
+                width={metrics.width}
+                height={metrics.height}
                 fill={c("black")}
               />
             ))}
