@@ -57,6 +57,20 @@ const gameNav = [
     key: "7",
     section: "background",
   },
+  {
+    key: "8",
+    section: "par",
+    pagination: true,
+  },
+  {
+    key: "9",
+    section: "revenue",
+    pagination: true,
+  },
+  {
+    key: "m",
+    section: "tile-manifest",
+  },
 ];
 
 const Toolbar = () => {
