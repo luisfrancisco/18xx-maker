@@ -771,3 +771,11 @@ footer a:hover {
   outline: 0.5pt solid #ff00ff;
   outline-offset: -0.25pt;
 }
+
+/* The printable components are paper: they keep their own colours whatever
+   the app theme. Without this, dark mode paints their inherited text with the
+   light foreground and it vanishes on the white cards and charters. */
+#viewport-children {
+  color: #000;
+  color-scheme: light;
+}
