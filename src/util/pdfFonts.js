@@ -7,8 +7,9 @@ import colorblindSymbols from "@/fonts/ColorblindSymbols.ttf?url";
 // Font name used in the svg / pdf for the display face
 export const DISPLAY_FONT = "Bitter";
 
-// Font family for the tile colorblind symbols (⏷ ⏹ ⏺ ✱ ★ ⨉ ⏶ 〜), used as-is
-// in the svg and registered under the same name in the pdf
+// Font family for tile ids with colorblind symbols (⏷ ⏹ ⏺ ✱ ★ ⨉ ⏶ 〜 plus
+// printable ASCII), used as-is in the svg and registered under the same name
+// in the pdf
 export const COLORBLIND_FONT = "colorblind";
 
 // The app's "display" face is Bitter, shipped to the browser as woff2, which

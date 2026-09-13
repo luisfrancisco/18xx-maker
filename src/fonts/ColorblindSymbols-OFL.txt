@@ -1,5 +1,7 @@
-ColorblindSymbols.ttf contains glyphs taken from Noto Sans Symbols 2,
-Noto Sans Math and Noto Sans JP (github.com/notofonts), subset and merged.
+ColorblindSymbols.ttf contains glyphs taken from Noto Sans (printable
+ASCII), Noto Sans Symbols 2, Noto Sans Math and Noto Sans JP
+(github.com/notofonts), subset and merged; the symbols are rescaled to a
+common size.
 
 Copyright 2022 The Noto Project Authors (https://github.com/notofonts/)
 

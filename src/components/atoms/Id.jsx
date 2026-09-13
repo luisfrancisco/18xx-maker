@@ -31,25 +31,25 @@ const Id = ({ id, displayID, extra, bgColor, noID }) => {
     return null;
   }
 
-  // The colorblind symbols are drawn in their own embedded font (see
-  // fonts/ColorblindSymbols.ttf): the default sans-serif has none of these
-  // glyphs, so the browser used whatever fallback it found and a PDF export
-  // had nothing to render them with at all.
-  let symbols = "";
-  let separator = "";
+  // With colorblind symbols on, the whole label is drawn in an embedded font
+  // (fonts/ColorblindSymbols.ttf) that has both the symbols and the id
+  // characters: the default sans-serif has none of the symbols, so the browser
+  // used whatever fallback it found and a PDF export had nothing to render
+  // them with. Keeping symbol and id in one string of one font also makes the
+  // PDF write it as a single text object, editable as a whole in Illustrator.
+  let fontFamily = "sans-serif";
   if (config.tiles.colorblind) {
     const [background, stripe] = bgColor.split("/");
 
     if (stripe) {
-      symbols = `${symbol(background)}${symbol(stripe)}`;
+      id = `${symbol(background)}${symbol(stripe)}${id}`;
     } else {
-      symbols = symbol(background);
-      separator = " ";
+      id = `${symbol(background)} ${id}`;
     }
+    fontFamily = COLORBLIND_FONT;
   }
 
-  const label = `${symbols}${separator}${id}`;
-  let fontSize = label.length > 4 ? "9" : label.length > 3 ? "10" : "12";
+  let fontSize = id && id.length > 4 ? "9" : id && id.length > 3 ? "10" : "12";
   let extraFontSize =
     extra && extra.length > 4 ? "9" : extra && extra.length > 3 ? "10" : "12";
 
@@ -78,7 +78,7 @@ const Id = ({ id, displayID, extra, bgColor, noID }) => {
         <>
           <g transform={`rotate(${rotation}) translate(${idX} ${idY})`}>
             <text
-              fontFamily="sans-serif"
+              fontFamily={fontFamily}
               fill={c("black")}
               stroke="none"
               strokeLinecap="round"
@@ -90,15 +90,7 @@ const Id = ({ id, displayID, extra, bgColor, noID }) => {
               x="0"
               y="0"
             >
-              {displayID || (
-                <>
-                  {symbols && (
-                    <tspan fontFamily={COLORBLIND_FONT}>{symbols}</tspan>
-                  )}
-                  {separator}
-                  {id}
-                </>
-              )}
+              {displayID || id}
             </text>
           </g>
           {extra && (
