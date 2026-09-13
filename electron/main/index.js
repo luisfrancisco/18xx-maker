@@ -13,7 +13,7 @@ import {
   getConfig,
   getSummaries,
 } from "./config.js";
-import { exportPDF, exportPNG, pdf, png } from "./export.js";
+import { exportPDF, exportPNG, pdf, png, savePdf } from "./export.js";
 import { TYPE, loadGame, openGame, saveGamePath } from "./game.js";
 import { setMenu } from "./menu.js";
 import { send } from "./util.js";
@@ -121,6 +121,7 @@ ipcMain.handle("loadGame", (event, id) => {
 });
 
 ipcMain.handle("openGame", openGame);
+ipcMain.handle("savePdf", (event, filename, data) => savePdf(filename, data));
 
 ipcMain.on("addRecent", (event, title, slug) => {
   addRecent(title, slug);

@@ -16,15 +16,9 @@ const defaultConfig = configs["../defaults.json"];
 const userConfig = configs["../config.json"] || {};
 const initialConfig = mergeDeepRight(defaultConfig, userConfig);
 
-export const useConfig = () => {
-  const dispatch = useDispatch();
-  const game = useGame();
-  const location = useLocation();
-  const { validateConfigSchema } = useValidation();
+const buildConfig = (storedConfig, search, game) => {
+  const searchParams = new URLSearchParams(search);
 
-  const searchParams = new URLSearchParams(location.search);
-
-  const storedConfig = useSelector((state) => state.config);
   const preSearchConfig = mergeDeepRight(initialConfig, storedConfig);
 
   // Add Search config in
@@ -40,6 +34,44 @@ export const useConfig = () => {
   // Add Game config in
   const gameConfig = defaultTo({}, game && game.config);
   const config = mergeDeepRight(preGameConfig, gameConfig);
+
+  return { config, searchConfig, gameConfig };
+};
+
+// useConfig is called by nearly every rendered element (every <Color />, for a
+// start), so the merges above used to run thousands of times per render and
+// hand back a new config object every time. The inputs are global, so cache the
+// last result at module level: this keeps it to one merge per actual change and
+// gives consumers a stable identity to memoize on.
+let configCache = null;
+const getConfig = (storedConfig, search, game) => {
+  if (
+    configCache &&
+    configCache.storedConfig === storedConfig &&
+    configCache.search === search &&
+    configCache.game === game
+  ) {
+    return configCache.result;
+  }
+
+  const result = buildConfig(storedConfig, search, game);
+  configCache = { storedConfig, search, game, result };
+  return result;
+};
+
+export const useConfig = () => {
+  const dispatch = useDispatch();
+  const game = useGame();
+  const location = useLocation();
+  const { validateConfigSchema } = useValidation();
+
+  const storedConfig = useSelector((state) => state.config);
+
+  const { config, searchConfig, gameConfig } = getConfig(
+    storedConfig,
+    location.search,
+    game,
+  );
 
   const setConfig = useCallback(
     async (config) => {

@@ -92,7 +92,7 @@ const Cutlines = () => {
     return null;
   }
 
-  let c = getTileSheetContext(layout, paper, hexWidth);
+  let c = getTileSheetContext(layout, paper, hexWidth, config.export.bleed);
   return [
     <HorizontalLines key="horizontal" {...c} />,
     <ForwardLines key="forward" {...c} />,

@@ -43,7 +43,11 @@
   "theme": "gmt",
   "companiesTheme": "rob",
   "export": {
-    "allLayouts": false
+    "allLayouts": false,
+    "bleed": true,
+    "cropMarks": true,
+    "dieline": false,
+    "bleedSize": 12.5
   },
   "charters": {
     "style": "color",
@@ -91,7 +95,9 @@
     "reverseMarketTokens": "all"
   },
   "privates": {
-    "style": "small"
+    "style": "small",
+    "width": 0,
+    "height": 0
   },
   "trains": {
     "style": "color",
@@ -110,7 +116,9 @@
       "y": 25,
       "x1": 100,
       "x2": 700
-    }
+    },
+    "idOffsetX": 0,
+    "idOffsetY": 0
   },
   "stock": {
     "cell": {

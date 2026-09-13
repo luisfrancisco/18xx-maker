@@ -11,6 +11,7 @@ import MapMarket from "@/components/map/MapMarket";
 import MapPlayers from "@/components/map/MapPlayers";
 import MapRoundTracker from "@/components/map/MapRoundTracker";
 import Title from "@/components/map/Title";
+
 import { multiDefaultTo } from "@/util";
 import { getMapData, toAlpha, toCoords } from "@/util/map";
 
@@ -27,7 +28,7 @@ const Map = ({ name, game, config, variation }) => {
     return null;
   }
 
-  let mapHexes = R.chain((hex) => {
+  let mapHexes = R.addIndex(R.chain)((hex, index) => {
     return R.map(
       ([x, y]) => {
         let translate = `translate(${data.hexX(x, y)} ${data.hexY(x, y)})`;
@@ -37,7 +38,7 @@ const Map = ({ name, game, config, variation }) => {
         return (
           <g
             transform={`${translate} ${scale}`}
-            key={`hex-${name}-${hex.variation}-${coord}`}
+            key={`hex-${name}-${hex.variation}-${index}-${coord}`}
           >
             <Hex
               hex={hex}

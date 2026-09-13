@@ -1,46 +1,59 @@
-import { useEffect, useState } from "react";
-
-import Box from "@mui/material/Box";
-import MUIInput from "@mui/material/FilledInput";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import makeStyles from "@mui/styles/makeStyles";
+import clsx from "clsx";
+import { useEffect, useRef, useState } from "react";
 
 import { keys, map } from "ramda";
 
-const useStyles = makeStyles((theme) => ({
-  configItem: {
-    minWidth: 300,
-    margin: theme.spacing(3, 0, 0, 0),
-    flexDirection: "row",
-  },
-  configInput: {
-    width: 200,
-  },
-  configUnits: {
-    width: 100,
-    marginLeft: theme.spacing(1),
-  },
-}));
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const allUnits = {
   inches: 100.0,
   mm: 3.937007874,
 };
 
+// Config dimensions are stored as whole hundredths of an inch (the schema
+// requires an integer), so a converted value has to be rounded before it goes
+// back out. Without this, anything entered in mm lands on a fraction -- 240mm
+// becomes 944.8818897599999 -- and fails schema validation.
+const toConfig = (displayValue, units) =>
+  Math.round(displayValue * allUnits[units]);
+
+// Converting the other way leaves a floating point tail of its own (850 units
+// reads back as 215.9000000008636 mm), so trim it for display. Two decimals is
+// finer than one stored unit in either direction, so this still round-trips.
+const toDisplay = (configValue, units) =>
+  Math.round((configValue / allUnits[units]) * 100) / 100;
+
 // Component to help input units
 const UnitInput = ({ name, value, label, onChange, errorValidation }) => {
-  const classes = useStyles();
   let [error, setError] = useState(false);
-  let [units, setUnits] = useState("inches");
-  let [internalValue, setInternalValue] = useState(value / allUnits[units]);
+  let [units, setUnits] = useState("mm");
+  let [internalValue, setInternalValue] = useState(toDisplay(value, units));
 
   const isError = error || errorValidation;
 
+  // The stored config value is only ever a round-tripped approximation of
+  // what was typed (240mm becomes 945 units, which reads back as 240.03mm),
+  // so once that rounded value comes back around as the `value` prop, it
+  // would otherwise silently correct what the user typed on screen. Skip
+  // that resync when the incoming value is the one this input itself just
+  // sent, so what was typed stays displayed; a value arriving for any other
+  // reason (switching games, another field, the initial mount) still syncs.
+  const lastSentConfigValue = useRef(null);
+
   useEffect(() => {
-    setInternalValue(value / allUnits[units]);
+    if (lastSentConfigValue.current === value) {
+      return;
+    }
+
+    setInternalValue(toDisplay(value, units));
   }, [value, units]);
 
   let handler = (event) => {
@@ -58,47 +71,50 @@ const UnitInput = ({ name, value, label, onChange, errorValidation }) => {
       }
     }
 
-    onChange(numberValue * allUnits[units]);
+    let configValue = toConfig(numberValue, units);
+    lastSentConfigValue.current = configValue;
+    onChange(configValue);
   };
 
-  let unitsHandler = (event) => {
-    setUnits(event.target.value);
-    setInternalValue(value / allUnits[event.target.value]);
+  let unitsHandler = (newValue) => {
+    setUnits(newValue);
+    setInternalValue(toDisplay(value, newValue));
   };
+
+  const className = clsx({ "border-error": isError });
+  const numberClassName = clsx(className, "w-20");
+  const unitClassName = clsx(className, "w-24");
 
   return (
-    <Box className={classes.configItem}>
-      <FormControl variant="filled" error={isError}>
-        <InputLabel id={`${name}-label`}>{label}</InputLabel>
-        <MUIInput
+    <div className="">
+      <Label className="w-min text-lg" htmlFor={name}>
+        {label}
+      </Label>
+      <div className="flex flex-row gap-2 my-1 justify-start items-center">
+        <Input
           id={name}
           name={name}
-          className={classes.configInput}
-          variant="filled"
-          inputProps={{ type: "input" }}
           value={internalValue}
           onChange={handler}
+          className={numberClassName}
         />
-      </FormControl>
-      <FormControl variant="filled">
-        <Select
-          id={`${name}-units`}
-          labelId={`${name}-label`}
-          className={classes.configUnits}
-          value={units}
-          onChange={unitsHandler}
-        >
-          {map(
-            (key) => (
-              <MenuItem key={key} value={key}>
-                {key}
-              </MenuItem>
-            ),
-            keys(allUnits),
-          )}
+        <Select onValueChange={unitsHandler} value={units}>
+          <SelectTrigger className={unitClassName}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {map(
+              (key) => (
+                <SelectItem key={key} value={key}>
+                  {key}
+                </SelectItem>
+              ),
+              keys(allUnits),
+            )}
+          </SelectContent>
         </Select>
-      </FormControl>
-    </Box>
+      </div>
+    </div>
   );
 };
 

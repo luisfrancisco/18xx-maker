@@ -1,9 +1,5 @@
 import { useNavigate } from "react-router";
 
-import { useConfig, useGame } from "@/hooks";
-
-import "@/components/pages/games/Tiles.css";
-
 import {
   addIndex,
   append,
@@ -33,8 +29,10 @@ import Page from "@/components/Page";
 import PageSetup from "@/components/PageSetup";
 import Pins from "@/components/Pins";
 import Svg from "@/components/Svg";
+
 import ColorContext from "@/context/ColorContext";
 import { tiles as tileDefs } from "@/data";
+import { useConfig, useGame } from "@/hooks";
 import { getTile, sortTiles } from "@/util";
 import { getTileSheetContext } from "@/util/tilesheet";
 import { sidesFromTile } from "@/util/track";
@@ -100,14 +98,18 @@ const tileBelow = (page, i) => {
 const pageTiles = (perPage, pages, tiles) => {
   if (tiles.length === 0) return pages;
 
-  let current = take(perPage, tiles);
-  let rest = drop(perPage, tiles);
+  // A paper size smaller than a tile gives a page that holds nothing, which
+  // would otherwise recurse forever; put at least one tile on each page.
+  const size = Math.max(1, perPage || 0);
+
+  let current = take(size, tiles);
+  let rest = drop(size, tiles);
 
   while (rest.length > 0 && rest[0] === null) {
     rest = drop(1, rest);
   }
 
-  return pageTiles(perPage, append(current, pages), rest);
+  return pageTiles(size, append(current, pages), rest);
 };
 
 const TileSheet = () => {
@@ -121,7 +123,8 @@ const TileSheet = () => {
     navigate(`/games/${game.meta.slug}/`);
   }
 
-  let c = getTileSheetContext(layout, paper, hexWidth);
+  const bleed = config.export.bleed;
+  let c = getTileSheetContext(layout, paper, hexWidth, bleed);
 
   let tiles = gatherTiles(game.tiles);
 
@@ -292,6 +295,10 @@ const TileSheet = () => {
         sides.push(clone(currentSides));
       }
 
+      if (!bleed) {
+        clipPath = "hexClipPath";
+      }
+
       // Overrides from tile definitions
       if (hex.clipPath === false) {
         clipPath = "hexClipPath";
@@ -329,7 +336,10 @@ const TileSheet = () => {
       ) : null;
 
     return (
-      <div className="TileSheet--Page" key={`page-${pageIndex}`}>
+      <div
+        key={`page-${pageIndex}`}
+        className="break-inside-avoid overflow-auto relative"
+      >
         <Page
           title={game.info.title}
           component="Tiles"
@@ -343,7 +353,7 @@ const TileSheet = () => {
           }}
           viewBox={`${viewBoxStr}`}
         >
-          <Cutlines />
+          <Cutlines className="absolute top-0" />
           {pins}
           {tileNodes}
         </Svg>
@@ -354,8 +364,9 @@ const TileSheet = () => {
   return (
     <ColorContext.Provider value="tile">
       <div
+        style={{ width: `${c.pageWidth * 0.01}in` }}
         data-testid={`game-${game.meta.slug}-tiles`}
-        className={`tileSheet tileSheet--${layout}`}
+        className="m-auto"
       >
         {pageNodes}
         <PageSetup paper={c.paper} landscape={false} />

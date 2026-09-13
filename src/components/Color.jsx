@@ -15,19 +15,16 @@ const colorAliases = {
   purple: "violet",
 };
 
-const resolveColor = curry(
-  (theme, companiesTheme, phase, context, game, name) => {
-    if (colorAliases[name]) {
-      name = colorAliases[name];
-    }
+const buildPalette = (theme, companiesTheme, game) => {
+  let colors = prop(
+    "colors",
+    defaultTo(prop("gmt", mapThemes), prop(theme, mapThemes)),
+  );
 
-    let colors = prop(
-      "colors",
-      defaultTo(prop("gmt", mapThemes), prop(theme, mapThemes)),
-    );
-
-    // Add in company colors
-    colors["companies"] = mergeDeepRight(
+  // Add in company colors
+  colors = {
+    ...colors,
+    companies: mergeDeepRight(
       prop("colors", prop("rob", companyThemes)),
       prop(
         "colors",
@@ -36,32 +33,70 @@ const resolveColor = curry(
           prop(companiesTheme, companyThemes),
         ),
       ),
-    );
+    ),
+  };
 
-    // Add in game colors
-    colors = mergeDeepRight(colors, game ? game.colors || {} : {});
+  // Add in game colors
+  return mergeDeepRight(colors, game ? game.colors || {} : {});
+};
 
-    // Get color from context if it exists
-    let color = colors[name];
-    if (colors[context] && colors[context][name]) {
-      color = colors[context][name];
-    }
+// Resolving a single color used to rebuild and deep merge the whole palette,
+// which happens thousands of times per map render. Build it once per theme and
+// game instead.
+const paletteCache = new Map();
+const getPalette = (theme, companiesTheme, game) => {
+  const key = `${theme} ${companiesTheme}`;
+  const cached = paletteCache.get(key);
 
-    // If color is an object use phase
-    if (is(Object, color)) {
-      color = color[phase || "default"] || color["default"];
-    }
-    return color;
-  },
-);
+  if (cached && cached.game === game) {
+    return cached.palette;
+  }
 
-const textColor = curry((theme, companiesTheme, phase, game, color) => {
+  const palette = buildPalette(theme, companiesTheme, game);
+  paletteCache.set(key, { game, palette });
+  return palette;
+};
+
+const resolveColor = curry((palette, phase, context, name) => {
+  if (colorAliases[name]) {
+    name = colorAliases[name];
+  }
+
+  // Get color from context if it exists
+  let color = palette[name];
+  if (palette[context] && palette[context][name]) {
+    color = palette[context][name];
+  }
+
+  // If color is an object use phase
+  if (is(Object, color)) {
+    color = color[phase || "default"] || color["default"];
+  }
+  return color;
+});
+
+const textColorCache = new WeakMap();
+const textColor = curry((palette, phase, color) => {
+  let resolved = textColorCache.get(palette);
+  if (!resolved) {
+    resolved = new Map();
+    textColorCache.set(palette, resolved);
+  }
+
+  const key = `${phase} ${color}`;
+  if (resolved.has(key)) {
+    return resolved.get(key);
+  }
+
   let text = [
-    resolveColor(theme, companiesTheme, phase, null, game, "white"),
-    resolveColor(theme, companiesTheme, phase, null, game, "black"),
+    resolveColor(palette, phase, null, "white"),
+    resolveColor(palette, phase, null, "black"),
   ];
   let tc = tinycolor(color);
-  return tinycolor.mostReadable(tc, text).toRgbString();
+  const value = tinycolor.mostReadable(tc, text).toRgbString();
+
+  resolved.set(key, value);
+  return value;
 });
 
 const strokeColor = (color, amount = 20) => {
@@ -79,20 +114,16 @@ const Color = ({ context, children }) => {
   const game = useGame();
   const { theme, companiesTheme } = config;
 
+  const palette = getPalette(theme, companiesTheme, game);
+
   return (
     <ColorContext.Consumer>
       {(colorContext) => (
         <PhaseContext.Consumer>
           {(phase) => {
-            let c = resolveColor(
-              theme,
-              companiesTheme,
-              phase,
-              context || colorContext,
-              game,
-            );
-            let p = resolveColor(theme, companiesTheme, phase, undefined, game);
-            let t = textColor(theme, companiesTheme, phase, game);
+            let c = resolveColor(palette, phase, context || colorContext);
+            let p = resolveColor(palette, phase, undefined);
+            let t = textColor(palette, phase);
             let s = strokeColor;
 
             return <>{children(c, t, s, p)}</>;

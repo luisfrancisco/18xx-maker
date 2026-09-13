@@ -1,58 +1,31 @@
-import { useLocation } from "react-router";
+import ExportPreview from "@/components/ExportPreview";
+import PrintActions from "@/components/PrintActions";
+import Toolbar from "@/components/Toolbar";
+import Config from "@/components/config/Config";
 
-import Box from "@mui/material/Box";
-import { useTheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import makeStyles from "@mui/styles/makeStyles";
-
-import { useSideMenu } from "@/hooks/useSideMenu";
+import { useConfig } from "@/hooks";
 import { useBooleanParam } from "@/util/query";
 
-const useStyles = makeStyles((theme) => ({
-  viewport: {
-    transitionProperty: "width, margin-left, margin-right",
-    transitionDuration: theme.transitions.duration.shorter,
-    transitionTimingFunction: theme.transitions.easing.sharp,
-    overflow: "auto",
-  },
-}));
+const Viewport = ({ children }) => {
+  const [configOpen] = useBooleanParam("config");
+  const { config } = useConfig();
 
-const Viewport = ({ sideNavOpen, children }) => {
-  const needsSideMenu = useSideMenu();
-  const classes = useStyles();
-  const [print] = useBooleanParam("print");
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const configOpen = searchParams.has("config");
-
-  const theme = useTheme();
-  const isSmall = useMediaQuery(theme.breakpoints.up("sm"));
-  const isMedium = useMediaQuery(theme.breakpoints.up("md"));
-  const isLarge = useMediaQuery(theme.breakpoints.up("lg"));
-
-  let marginLeft = "0px";
-  let marginRight = "0px";
-  if (!print) {
-    if (needsSideMenu && (isMedium || sideNavOpen)) {
-      marginLeft = "300px";
-    }
-    if (configOpen) {
-      if (isLarge) {
-        marginRight = "35%";
-      } else if (isSmall) {
-        marginRight = "50%";
-      }
-    }
-  }
-  let width = `calc(100% - ${marginLeft} - ${marginRight})`;
+  // Cards and charters are html, so their dieline is drawn by css (an outline
+  // on the trim box) rather than by the export overlay; that way it is part
+  // of the page and comes through the print / Save as PDF path as a vector.
+  const dieline = config.export.dieline ? " export-dieline" : "";
 
   return (
-    <Box
-      className={classes.viewport}
-      style={{ width, marginLeft, marginRight }}
+    <div
+      id="viewport"
+      className={`editor-checkered print:bg-none print:bg-white select-none overscroll-none${dieline}`}
     >
-      {children}
-    </Box>
+      <Toolbar />
+      <PrintActions />
+      <ExportPreview />
+      {configOpen && <Config />}
+      <div id="viewport-children">{children}</div>
+    </div>
   );
 };
 

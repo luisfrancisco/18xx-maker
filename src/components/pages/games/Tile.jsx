@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router";
 
 import Hex from "@/components/Hex";
 import Svg from "@/components/Svg";
+
 import ColorContext from "@/context/ColorContext";
 import { tiles as tileDefs } from "@/data";
 import { useConfig, useGame } from "@/hooks";
@@ -33,7 +34,9 @@ const TileSheet = () => {
           }}
           viewBox={`-100 -100 200 200`}
         >
-          <g clipPath={`url(#hexClipPath)`}>
+          <g
+            clipPath={`url(#${config.export.bleed ? "hexBleedClipPath" : "hexClipPath"})`}
+          >
             <Hex hex={tile} id={tile.id} clipPath="hexBleedClipPath" />
           </g>
         </Svg>

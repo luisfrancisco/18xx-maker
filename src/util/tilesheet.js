@@ -1,7 +1,13 @@
 import { HEX_RATIO } from "@/util/map";
 
-export const getTileSheetContext = (layout, paper, hexWidth) => {
-  let c = { layout, paper, hexWidth };
+export const getTileSheetContext = (layout, paper, hexWidth, bleed = true) => {
+  let c = { layout, paper, hexWidth, bleed };
+
+  // Tiles are drawn with a 10 unit bleed. With bleed off every layout clips at
+  // the cut edge instead; with it on, the individual layout lays the tiles out
+  // by their bleed footprint so the bleeds stay clear of each other and of
+  // the page edge.
+  const gap = 12.5;
 
   // Hardcode hexWidth for the layouts corresponding to dies
   switch (layout) {
@@ -44,7 +50,7 @@ export const getTileSheetContext = (layout, paper, hexWidth) => {
       c.perPage = c.perRow * c.rowsPerPage;
       c.pageWidth = 800;
       c.pageHeight = 1050;
-      c.clipPath = "hexBleedClipPath";
+      c.clipPath = bleed ? "hexBleedClipPath" : "hexClipPath";
 
       // The die spaces columns apart by 0.25 inches
       c.tileOffsetX = c.width + 25;
@@ -68,7 +74,7 @@ export const getTileSheetContext = (layout, paper, hexWidth) => {
       c.perPage = 60;
       c.pageWidth = 800;
       c.pageHeight = 1050;
-      c.clipPath = "hexBleedClipPath";
+      c.clipPath = bleed ? "hexBleedClipPath" : "hexClipPath";
 
       // The die spaces columns apart by -0.0994 inches
       c.tileOffsetX = c.width - 9.94;
@@ -109,37 +115,43 @@ export const getTileSheetContext = (layout, paper, hexWidth) => {
         }
       };
       break;
-    case "individual":
-      c.perRow = Math.floor((c.pageWidth + 12.5) / (c.width + 12.5));
-      c.rowsPerPage = Math.floor((c.pageHeight + 12.5) / (c.height + 12.5));
+    case "individual": {
+      // Each tile takes up its full footprint, bleed included, so nothing is
+      // clipped at the page edge and the grid is centred on the page
+      const tileWidth = bleed ? c.bleedWidth : c.width;
+      const tileHeight = bleed ? c.bleedHeight : c.height;
+
+      c.perRow = Math.floor((c.pageWidth + gap) / (tileWidth + gap));
+      c.rowsPerPage = Math.floor((c.pageHeight + gap) / (tileHeight + gap));
       c.perPage = c.perRow * c.rowsPerPage;
-      c.clipPath = "hexClipPath";
+      c.clipPath = bleed ? "hexBleedClipPath" : "hexClipPath";
 
-      c.gapX = 12.5;
-      c.gapY = 12.5;
+      c.gapX = gap;
+      c.gapY = gap;
 
-      c.tileOffsetX = c.width + 12.5;
-      c.tileOffsetY = c.height + 12.5;
+      c.tileOffsetX = tileWidth + gap;
+      c.tileOffsetY = tileHeight + gap;
 
       // Extra space around the page
       c.extraX =
-        (c.pageWidth - c.perRow * c.width - (c.perRow - 1) * c.gapX) / 2;
+        (c.pageWidth - c.perRow * tileWidth - (c.perRow - 1) * c.gapX) / 2;
       c.extraY =
         (c.pageHeight -
-          c.rowsPerPage * c.height -
+          c.rowsPerPage * tileHeight -
           (c.rowsPerPage - 1) * c.gapY) /
         2;
 
       // Functions to get coordinates
-      c.getX = (n) =>
-        c.bleedWidth / 2 + c.extraX + c.getXindex(n) * c.tileOffsetX;
-      c.getY = (n) => c.height / 2 + c.extraY + c.getYindex(n) * c.tileOffsetY;
+      c.getX = (n) => tileWidth / 2 + c.extraX + c.getXindex(n) * c.tileOffsetX;
+      c.getY = (n) =>
+        tileHeight / 2 + c.extraY + c.getYindex(n) * c.tileOffsetY;
       break;
+    }
     case "offset":
       c.perRow = Math.floor((c.pageWidth - 20 - c.width / 2) / c.width);
       c.rowsPerPage = Math.floor((c.pageHeight - 20) / c.height);
       c.perPage = c.perRow * c.rowsPerPage;
-      c.clipPath = "hexBleedClipPathOffset";
+      c.clipPath = bleed ? "hexBleedClipPathOffset" : "hexClipPath";
 
       // Offset tiles are always offset by their plain width and height, regardless of bleed
       c.tileOffsetX = c.width;

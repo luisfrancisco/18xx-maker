@@ -7,6 +7,7 @@ import Number from "@/components/cards/Number";
 import Private from "@/components/cards/Private";
 import Share from "@/components/cards/Share";
 import Train from "@/components/cards/Train";
+
 import { useConfig, useGame } from "@/hooks";
 import { fillArray, maxPlayers } from "@/util";
 import { getCardData } from "@/util/cards";
@@ -82,16 +83,31 @@ const Cards = ({ hidePrivates, hideShares, hideTrains, hideNumbers }) => {
     numberColors,
   );
 
+  let cardConfig = clone(config.cards);
+  let paperConfig = clone(config.paper);
+  let dtgPadding = cardConfig.dtgPadding;
+
+  // In the free layout privates can have a size of their own (0 means the
+  // same as the other cards). When it differs they go on pages of their own,
+  // laid out for that size.
+  const privateWidth =
+    config.cards.layout === "free" && config.privates.width > 0
+      ? config.privates.width
+      : cardConfig.width;
+  const privateHeight =
+    config.cards.layout === "free" && config.privates.height > 0
+      ? config.privates.height
+      : cardConfig.height;
+  const separatePrivates =
+    privateNodes.length > 0 &&
+    (privateWidth !== cardConfig.width || privateHeight !== cardConfig.height);
+
   let cardNodes = [
-    ...privateNodes,
+    ...(separatePrivates ? [] : privateNodes),
     ...shareNodes,
     ...trainNodes,
     ...numberNodes,
   ];
-
-  let cardConfig = clone(config.cards);
-  let paperConfig = clone(config.paper);
-  let dtgPadding = cardConfig.dtgPadding;
 
   switch (config.cards.layout) {
     case "miniEuroDie":
@@ -125,6 +141,23 @@ const Cards = ({ hidePrivates, hideShares, hideTrains, hideNumbers }) => {
 
   let data = getCardData(cardConfig, paperConfig);
 
+  // The private pages share the sheet's paper orientation, so pick the
+  // matching grid rather than the one getCardData would prefer
+  let privateData = null;
+  if (separatePrivates) {
+    privateData = getCardData(
+      { ...cardConfig, width: privateWidth, height: privateHeight },
+      paperConfig,
+    );
+    const grid = data.layout.landscape
+      ? privateData.landscape
+      : privateData.portrait;
+    privateData = {
+      ...privateData,
+      layout: { ...grid, landscape: data.layout.landscape },
+    };
+  }
+
   let pins = null;
 
   if (config.cards.layout !== "free") {
@@ -154,64 +187,89 @@ const Cards = ({ hidePrivates, hideShares, hideTrains, hideNumbers }) => {
     splitCardNodes,
   );
 
-  let css = `
-.cutlines {
+  let privatePageNodes = null;
+  if (privateData) {
+    privatePageNodes = addIndex(map)(
+      (nodes, i) => (
+        <div
+          className={`cards cards--${config.cards.layout} cards-privates`}
+          key={`cards-privates-page-${i}`}
+          style={{
+            width: data.css.printableWidth,
+            height: data.css.printableHeight,
+          }}
+        >
+          {nodes}
+          {pins}
+        </div>
+      ),
+      splitEvery(Math.max(1, privateData.layout.perPage), privateNodes),
+    );
+  }
+
+  // The size rules, optionally scoped to the private pages
+  const cardCss = (data, scope = "") => `
+${scope}.cutlines {
     padding: ${data.css.cutlines};
     width: ${data.css.totalWidth};
     height: ${data.css.totalHeight};
 }
 
-.cutlines:after,
-.cutlines:before {
+${scope}.cutlines:after,
+${scope}.cutlines:before {
     width: ${data.css.cutlines};
     height: ${data.css.height};
     top: ${data.css.cutlinesAndBleed};
 }
 
-.cutlines > div:after,
-.cutlines > div:before {
+${scope}.cutlines > div:after,
+${scope}.cutlines > div:before {
     width: ${data.css.width};
     height: ${data.css.cutlines};
     left: ${data.css.bleed};
 }
 
-.cutlines > div:after {
+${scope}.cutlines > div:after {
     bottom: -${data.css.cutlines};
 }
 
-.cutlines > div:before {
+${scope}.cutlines > div:before {
     top: -${data.css.cutlines};
 }
 
-.card,
-.card__bleed {
+${scope}.card,
+${scope}.card__bleed {
     height: ${data.css.bleedHeight};
     width: ${data.css.bleedWidth};
 }
 
-.card__body {
+${scope}.card__body {
     border: ${data.border}px solid black;
     margin: ${data.css.bleed};
     width: ${data.css.width};
     height: ${data.css.height};
 }
 
-.share__hr {
+${scope}.share__hr {
     bottom: calc(0.375in + ${data.css.bleed});
 }
 
-.share--left .share__hr {
+${scope}.share--left .share__hr {
     left: calc(0.2025in + ${data.css.bleed});
 }
 
-.share--gmt .share__hr {
+${scope}.share--gmt .share__hr {
     width: calc(0.67in + ${data.css.bleed});
 }
 
-.train__hr {
+${scope}.train__hr {
     height: calc(0.6875in + ${data.css.bleed});
 }
 `;
+
+  let css =
+    cardCss(data) +
+    (privateData ? cardCss(privateData, ".cards-privates ") : "");
 
   if (config.privates.style === "big") {
     css += `
@@ -250,6 +308,7 @@ const Cards = ({ hidePrivates, hideShares, hideTrains, hideNumbers }) => {
     <div data-testid={`game-${game.meta.slug}-cards`}>
       <style>{css}</style>
       {pageNodes}
+      {privatePageNodes}
       <PageSetup landscape={data.layout.landscape} />
     </div>
   );

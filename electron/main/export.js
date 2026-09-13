@@ -61,6 +61,32 @@ const createPDF = (path, filePath) => {
   });
 };
 
+// Saves PDF bytes the renderer produced itself (the vector exporter with
+// its bleed, crop marks and dieline), asking where to put them first.
+export const savePdf = (filename, data) => {
+  return dialog
+    .showSaveDialog(getMainWindow(), {
+      title: "Save PDF",
+      defaultPath: filename,
+      filters: [
+        {
+          name: "PDF Document",
+          extensions: ["pdf"],
+        },
+      ],
+    })
+    .then(({ filePath, canceled }) => {
+      if (canceled) {
+        return false;
+      }
+
+      fs.writeFileSync(filePath, Buffer.from(data));
+      shell.openPath(filePath);
+      send("alert", "PDF Created", filePath, "success");
+      return true;
+    });
+};
+
 export const pdf = (path) => {
   dialog
     .showSaveDialog(getMainWindow(), {

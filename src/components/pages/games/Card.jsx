@@ -6,6 +6,7 @@ import Number from "@/components/cards/Number";
 import Private from "@/components/cards/Private";
 import Share from "@/components/cards/Share";
 import Train from "@/components/cards/Train";
+
 import { useConfig, useGame } from "@/hooks";
 import { getCardData } from "@/util/cards";
 import { compileCompanies, overrideCompanies } from "@/util/companies";
@@ -79,6 +80,12 @@ const Card = () => {
     default:
       // No overrides for "free" layout
       break;
+  }
+
+  // Privates can have a size of their own in the free layout
+  if (type === "private" && config.cards.layout === "free") {
+    cardConfig.width = config.privates.width || cardConfig.width;
+    cardConfig.height = config.privates.height || cardConfig.height;
   }
 
   let data = getCardData(cardConfig, paperConfig);
