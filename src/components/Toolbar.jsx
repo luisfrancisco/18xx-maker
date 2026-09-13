@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch } from "react-redux";
-import { Link, useMatch, useNavigate } from "react-router";
+import { Link, useLocation, useMatch, useNavigate } from "react-router";
 
 import { find, map, propEq } from "ramda";
 
@@ -30,46 +30,56 @@ const gameNav = [
   {
     key: "1",
     section: "map",
+    configSection: "maps",
     pagination: true,
   },
   {
     key: "2",
     section: "tiles",
+    configSection: "tiles",
   },
   {
     key: "3",
     section: "tokens",
+    configSection: "tokens",
   },
   {
     key: "4",
     section: "cards",
+    configSection: "cards",
   },
   {
     key: "5",
     section: "charters",
+    configSection: "charters",
   },
   {
     key: "6",
     section: "market",
+    configSection: "stock",
     pagination: true,
   },
   {
     key: "7",
     section: "background",
+    configSection: "layout",
   },
   {
     key: "8",
     section: "par",
+    configSection: "stock",
     pagination: true,
   },
   {
     key: "9",
     section: "revenue",
+    configSection: "stock",
     pagination: true,
   },
   {
     key: "m",
     section: "tile-manifest",
+    configSection: "tiles",
   },
 ];
 
@@ -77,15 +87,37 @@ const Toolbar = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [paginated, togglePagination] = useBooleanParam("paginated");
-  const [config, toggleConfig] = useBooleanParam("config");
+  const [config] = useBooleanParam("config");
 
   const game = useGame();
   const slug = game.meta.slug;
 
   const match = useMatch("/games/:slug/:section/*");
   const item = find(propEq(match.params.section, "section"), gameNav);
+
+  // Opening the settings panel from a section jumps straight to that
+  // section's config instead of always landing on Colors. Both params are
+  // set through a single navigate call: setting them via two separate
+  // useBooleanParam/useStringParam calls would each build their own copy of
+  // the current search params and navigate independently, and the second
+  // call would clobber the first's change.
+  const onToggleConfig = () => {
+    const searchParams = new URLSearchParams(location.search);
+
+    if (config) {
+      searchParams.delete("config");
+    } else {
+      searchParams.set("config", true);
+      if (item.configSection) {
+        searchParams.set("section", item.configSection);
+      }
+    }
+
+    navigate({ search: searchParams.toString() });
+  };
 
   const handleKeyDown = useCallback(
     (event) => {
@@ -130,7 +162,7 @@ const Toolbar = () => {
       </Button>
       <Separator orientation="vertical" />
       <Toggle
-        onPressedChange={toggleConfig}
+        onPressedChange={onToggleConfig}
         pressed={config}
         variant="outline"
         className="rounded-sm p-2 w-8 h-8 m-0"
