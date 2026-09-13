@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { keys, map } from "ramda";
 
@@ -34,12 +34,25 @@ const toDisplay = (configValue, units) =>
 // Component to help input units
 const UnitInput = ({ name, value, label, onChange, errorValidation }) => {
   let [error, setError] = useState(false);
-  let [units, setUnits] = useState("inches");
+  let [units, setUnits] = useState("mm");
   let [internalValue, setInternalValue] = useState(toDisplay(value, units));
 
   const isError = error || errorValidation;
 
+  // The stored config value is only ever a round-tripped approximation of
+  // what was typed (240mm becomes 945 units, which reads back as 240.03mm),
+  // so once that rounded value comes back around as the `value` prop, it
+  // would otherwise silently correct what the user typed on screen. Skip
+  // that resync when the incoming value is the one this input itself just
+  // sent, so what was typed stays displayed; a value arriving for any other
+  // reason (switching games, another field, the initial mount) still syncs.
+  const lastSentConfigValue = useRef(null);
+
   useEffect(() => {
+    if (lastSentConfigValue.current === value) {
+      return;
+    }
+
     setInternalValue(toDisplay(value, units));
   }, [value, units]);
 
@@ -58,7 +71,9 @@ const UnitInput = ({ name, value, label, onChange, errorValidation }) => {
       }
     }
 
-    onChange(toConfig(numberValue, units));
+    let configValue = toConfig(numberValue, units);
+    lastSentConfigValue.current = configValue;
+    onChange(configValue);
   };
 
   let unitsHandler = (newValue) => {
